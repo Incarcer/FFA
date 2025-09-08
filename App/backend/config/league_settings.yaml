@@ -1,0 +1,14 @@
+#league_settings.yaml
+draft_settings:
+  total_rounds: 16
+  total_teams: 12
+  draft_order: "snake" # 'snake' or 'linear'
+  roster_structure:
+    QB: 1
+    RB: 2
+    WR: 3
+    TE: 1
+    FLEX: 1 # W/R/T
+    DST: 1
+    K: 1
+    BENCH: 6

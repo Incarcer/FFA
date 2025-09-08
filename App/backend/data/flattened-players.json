@@ -1,0 +1,25 @@
+[
+  {
+    "player_id": 30123,
+    "name": "Patrick Mahomes",
+    "display_position": "QB",
+    "editorial_team_abbr": "KC",
+    "bye": 10,
+    "has_player_notes": 1,
+    "headshot_url": "https://s.yimg.com/xe/i/us/sp/v/nfl_cutout/players_l/08212019/30123.png",
+    "percent_owned_value": 100.0,
+    "editorial_player_key": "nfl.p.30123"
+  },
+  {
+    "player_id": 30999,
+    "name": "Ja'Marr Chase",
+    "display_position": "WR",
+    "editorial_team_abbr": "CIN",
+    "bye": 7,
+    "has_player_notes": 1,
+    "headshot_url": "https://s.yimg.com/xe/i/us/sp/v/nfl_cutout/players_l/08212019/30999.png",
+    "percent_owned_value": 99.9,
+    "editorial_player_key": "nfl.p.30999"
+  }
+ 
+]

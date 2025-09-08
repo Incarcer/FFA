@@ -1,0 +1,47 @@
+# Git version control
+.git/
+.gitignore
+.gitattributes
+
+# Docker-related files (should not be in the image)
+docker-compose.yml
+dockerfile.backend
+dockerfile.frontend
+.dockerignore
+
+# Python virtual environment
+# These folders contain packages for your local machine, not for the container.
+# The container will install its own packages based on requirements.txt.
+venv/
+.venv/
+env/
+.env/
+Scripts/
+Lib/
+
+# Python bytecode and cache
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Secrets and environment variables
+# These should be injected at runtime, not built into the image.
+.env
+secrets/
+certs/
+.yahoofantasy
+
+# IDE and editor configuration
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Exclude the entire frontend app from the backend image's context
+frontend/
+
+# Log files
+*.log
