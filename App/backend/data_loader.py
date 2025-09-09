@@ -3,6 +3,8 @@ import pandas as pd
 # Assuming Player is a dataclass as defined in backend/models/data_models.py
 from backend.models.data_models import Player
 import os
+from pathlib import Path
+
 
 def load_all_player_data():
     """
@@ -10,9 +12,19 @@ def load_all_player_data():
     This function simulates loading data that would eventually come from various sources.
     It should align with the structure of your backend/data/flattened-players.json.
 
+
     Source: Uses concepts from "Player Model" in KB for player attributes.
     """
-    players_data_path = os.path.join(os.path.dirname(__file__), 'data', 'flattened-players.json')
+    # Determine the default data directory relative to this file
+    DEFAULT_DATA_DIR = Path(__file__).parent / "data"
+
+
+    # Read the data directory from the environment, falling back to the default
+    data_dir = Path(os.environ.get("DATA_DIRECTORY", DEFAULT_DATA_DIR))
+
+
+    # Construct the final path
+    players_data_path = data_dir / "flattened-players.json"
     
     
     # Check if the file exists before attempting to read
@@ -20,12 +32,14 @@ def load_all_player_data():
         print(f"Warning: flattened-players.json not found at {players_data_path}. Returning empty list.")
         return []
 
+
     try:
         # Assuming flattened-players.json contains a list of player dictionaries
         players_df = pd.read_json(players_data_path)
     except Exception as e:
         print(f"Error reading or parsing flattened-players.json: {e}. Returning empty list.")
         return []
+
 
     # Map DataFrame rows to Player dataclass instances
     # Ensure all attributes for Player dataclass are present in the DataFrame or given defaults
@@ -47,6 +61,7 @@ def load_all_player_data():
     
     print(f"Successfully loaded {len(player_list)} players from {players_data_path}.")
     return player_list
+
 
 # If you have other data loading functions, they would also go here
 def load_historical_data(player_id: str):
