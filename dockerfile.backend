@@ -1,22 +1,15 @@
 # Use an official Python runtime as a parent image
 FROM python:3.11-slim
 
-# Set the working directory in the container to /app
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy the requirements file into the container at /app
-COPY requirements.txt .
+# CRITICAL FIX: Copy the requirements file from its location within the new context.
+COPY ./backend/requirements.txt .
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# --- CORRECTION ---
-# The original command was `COPY ./App .`. This created a misaligned file structure
-# when used with the `docker-compose.yml` volume mount (`.:/app`).
-# By copying the entire project context (`.`), we ensure the image's internal
-# structure (/app/App/api_server) matches the runtime environment, making the
-# application path (`App.api_server.main`) valid in all scenarios and
-# resolving the `ModuleNotFoundError`.
+# Copy the rest of the application's code from the context into the container
+# This will now correctly include the 'App' directory and all other project files.
 COPY . .
-
-# Note: The CMD and EXPOSE are managed by docker-compose.yml for flexibility.

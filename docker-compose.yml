@@ -1,34 +1,25 @@
 services:
   backend:
     build:
+      # CRITICAL FIX: Context is now the project root to include the 'App' directory.
       context: .
-      dockerfile: dockerfile.backend
+      # CRITICAL FIX: Dockerfile path is now relative to the new context.
+      dockerfile: ./backend/dockerfile.backend
     ports:
       - "8443:8443"
     volumes:
+      # This mounts the entire project for live-reloading of all code.
       - .:/app
-      - ./certs:/app/certs:ro
-      - ./secrets:/app/secrets:ro
-    env_file:
-      - .env
-    command: >
-      uvicorn api_server.main:app
-      --host 0.0.0.0
-      --port 8443
-      --reload
-      --ssl-keyfile=${SSL_KEY_FILE}
-      --ssl-certfile=${SSL_CERT_FILE}
+    # CRITICAL FIX: The command now points to the module using its full path from the project root.
+    command: uvicorn App.api_server.app:app --host 0.0.0.0 --port 8443 --ssl-keyfile ./certs/key.pem --ssl-certfile ./certs/cert.pem --reload
 
   frontend:
     build:
       context: ./frontend
       dockerfile: dockerfile.frontend
     ports:
-      - "3000:5173"
+      - "5173:5173"
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    depends_on:
-      - backend
-    environment:
-      - VITE_API_BASE_URL=https://localhost:8443
+    command: ["npm", "run", "dev"]
