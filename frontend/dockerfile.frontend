@@ -1,17 +1,25 @@
-# frontend/dockerfile (Example for Development)
-
+# Use the official Node.js 20 Alpine image for a small, secure base
 FROM node:20-alpine
 
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy package files
-COPY frontend/package*.json ./
+# --- CORRECTION ---
+# The build context is './frontend'. The original path `frontend/package*.json` was
+# incorrect because it resolved to a non-existent './frontend/frontend/' path.
+# The corrected path `package*.json ./` correctly finds the file in the root of the build context.
+COPY package*.json ./
 
-# Ensure devDependencies are installed by not setting NODE_ENV to production
-# or by explicitly running `npm install` without the --production flag.
+# Install dependencies. This now works because package.json is present.
 RUN npm install
 
-# Copy the rest of the frontend source code
-COPY frontend/ .
+# --- CORRECTION ---
+# This command now correctly copies all files from the build context
+# (the host's './frontend' directory) into the image's working directory (/app).
+COPY . .
 
-# The CMD is already specified in docker-compose.yml
+# Expose the port Vite runs on
+EXPOSE 5173
+
+# The default command to run the development server.
+CMD ["npm", "run", "dev"]

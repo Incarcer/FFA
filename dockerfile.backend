@@ -1,7 +1,7 @@
 # Use an official Python runtime as a parent image
-FROM python:3.10-slim-buster
+FROM python:3.11-slim
 
-# Set the working directory in the container
+# Set the working directory in the container to /app
 WORKDIR /app
 
 # Copy the requirements file into the container at /app
@@ -10,11 +10,13 @@ COPY requirements.txt .
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application's code from the 'App' directory into the container at /app
-COPY ./App .
+# --- CORRECTION ---
+# The original command was `COPY ./App .`. This created a misaligned file structure
+# when used with the `docker-compose.yml` volume mount (`.:/app`).
+# By copying the entire project context (`.`), we ensure the image's internal
+# structure (/app/App/api_server) matches the runtime environment, making the
+# application path (`App.api_server.main`) valid in all scenarios and
+# resolving the `ModuleNotFoundError`.
+COPY . .
 
-# Make port 8000 available to the world outside this container
-EXPOSE 8000
-
-# Run the application when the container launches
-CMD ["uvicorn", "api_server.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Note: The CMD and EXPOSE are managed by docker-compose.yml for flexibility.
