@@ -4,12 +4,13 @@ FROM python:3.11-slim
 # Set the working directory in the container
 WORKDIR /app
 
-# CRITICAL FIX: Copy the requirements file from its location within the new context.
-COPY ./backend/requirements.txt .
+# FIX: Copy the correct requirements file from the root context.
+# The original file has no hashes, which simplifies builds.
+COPY ./requirements.txt .
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application's code from the context into the container
-# This will now correctly include the 'App' directory and all other project files.
+# This correctly includes the 'App' directory and all other project files.
 COPY . .

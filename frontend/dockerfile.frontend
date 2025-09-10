@@ -4,18 +4,13 @@ FROM node:20-alpine
 # Set the working directory inside the container
 WORKDIR /app
 
-# --- CORRECTION ---
-# The build context is './frontend'. The original path `frontend/package*.json` was
-# incorrect because it resolved to a non-existent './frontend/frontend/' path.
-# The corrected path `package*.json ./` correctly finds the file in the root of the build context.
+# FIX: Path corrected to find package.json in the root of the build context ('./frontend').
 COPY package*.json ./
 
 # Install dependencies. This now works because package.json is present.
 RUN npm install
 
-# --- CORRECTION ---
-# This command now correctly copies all files from the build context
-# (the host's './frontend' directory) into the image's working directory (/app).
+# FIX: This copies all files from the build context ('./frontend') into the image's WORKDIR.
 COPY . .
 
 # Expose the port Vite runs on
