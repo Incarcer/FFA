@@ -1,0 +1,6 @@
+    # traefik-dynamic-config.yaml
+    tls:
+      certificates:
+        - certFile: "/etc/traefik/certs/localhost.crt" # Path inside the Traefik container
+          keyFile: "/etc/traefik/certs/localhost.key"  # Path inside the Traefik container
+    

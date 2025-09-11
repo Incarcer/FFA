@@ -1,3 +1,5 @@
+#FFA\.dockerignore
+
 # Git version control
 .git/
 .gitignore

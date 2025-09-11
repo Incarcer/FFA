@@ -1,46 +1,84 @@
-# File: FFA/docker-compose.yml
+#version: '3.8'
 
 services:
-  api_server:
-    build:
-      context: . # Build context remains the project root (FFA/)
-      dockerfile: App/api_server/Dockerfile
+  traefik:
+    image: "traefik:v2.10" # Using a recent stable Traefik v2 version
+    container_name: traefik
+    command:
+      - --api.insecure=true # Enables the Traefik Dashboard at http://localhost:8081 for development
+      - --providers.docker=true # Enable Docker as a provider for dynamic configuration
+      - --providers.docker.exposedbydefault=false # Only expose services with traefik.enable=true label
+      - --entrypoints.web.address=:80 # Define an HTTP entrypoint on port 80
+      - --entrypoints.websecure.address=:8080 # Define an HTTPS entrypoint on port 8080 for your redirect URI
+      - --providers.file.filename=/etc/traefik/traefik-dynamic-config.yaml # Specify dynamic config file inside the container
+      - --providers.file.watch=true # Watch for changes in the dynamic config file
+      - --log.level=INFO # Set log level (DEBUG for more verbose, INFO for standard)
     ports:
-      - "8080:8080"
+      - "80:80"     # Expose HTTP port
+      - "8080:8080" # Expose HTTPS port for your application (matches your redirect URI)
+      - "8081:8081" # Expose Traefik Dashboard (optional)
     volumes:
-      # Mount the api_server source code to its location relative to the container's /app WORKDIR.
-      # This ensures live code changes are reflected correctly.
-      - ./App/api_server:/app/api_server
-      # The backend volume mount is already correctly configured if api_server depends on it.
-      - ./App/backend:/app/backend
-    env_file:
-      - .env
-    # Override the Dockerfile's CMD for development with --reload.
-    # The module path is now 'api_server.main:app'.
-    command: uvicorn api_server.main:app --host 0.0.0.0 --port 8080 --reload
-    depends_on:
-      - backend
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Mount Docker socket for Traefik to discover services
+      - ./traefik-dynamic-config.yaml:/etc/traefik/traefik-dynamic-config.yaml:ro # Mount the dynamic config file
+      - ./certs:/etc/traefik/certs:ro # Mount your existing generated self-signed certificates
+    networks:
+      - ffa-network # Connect Traefik to your application network
 
   backend:
     build:
-      context: . # Set build context to the project root (FFA/)
-      dockerfile: App/backend/Dockerfile # Path to the Dockerfile relative to the context
+      context: . # Build context is the project root (FFA/)
+      dockerfile: ./App/backend/Dockerfile # Path to the backend's Dockerfile relative to the context
+    container_name: ffa-backend-1
     volumes:
-      # Mount the backend source code for development.
-      # Assuming the WORKDIR in backend's Dockerfile is /app/backend.
-      - ./App/backend:/app/backend
-    env_file:
-      - .env # Load environment variables from a .env file at the project root
-    # Add a specific command here to start your backend service if it's not a web server.
-    # For example: command: ["python", "run_processor.py"]
+      - ./App/backend:/app/backend # Mount backend source code for development
+    networks:
+      - ffa-network
+
+  api_server:
+    build:
+      context: . # Build context is the project root (FFA/)
+      dockerfile: ./App/api_server/Dockerfile # Path to the api_server's Dockerfile relative to the context
+    container_name: ffa-api_server-1
+    environment:
+      # These variables will be passed to your api_server container
+      # Ensure YAHOO_REDIRECT_URI matches what Traefik exposes and what you configure in Yahoo Developer Network
+      - YAHOO_CONSUMER_KEY=${YAHOO_CONSUMER_KEY} # Will be read from your .env file
+      - YAHOO_CONSUMER_SECRET=${YAHOO_CONSUMER_SECRET} # Will be read from your .env file
+      - YAHOO_REDIRECT_URI=https://localhost:8080/connect/yahoo/callback # **Crucial: Update this**
+      - PORT=8080 # Your application listens on this internal port
+    volumes:
+      - ./App/api_server:/app/api_server # Mount api_server source code
+      - ./App/backend:/app/backend # Mount backend data/logic (if api_server depends on it this way)
+    # IMPORTANT: Remove the direct 'ports' mapping for api_server.
+    # Traefik will handle exposing 8080 externally and routing to the internal 8080.
+    # ports:
+    #   - "8080:8080"
+    command: uvicorn api_server.main:app --host 0.0.0.0 --port 8080 --reload # Your existing command
+    networks:
+      - ffa-network
+    depends_on:
+      - backend # Ensures backend starts before api_server
+    labels:
+      - "traefik.enable=true" # Tell Traefik to manage this service
+      - "traefik.http.routers.api_server.rule=Host(`localhost`)" # Route requests for 'localhost' to this service
+      - "traefik.http.routers.api_server.entrypoints=websecure" # Use the HTTPS entrypoint defined in Traefik
+      - "traefik.http.routers.api_server.tls=true" # Enable TLS for this router, using certificates defined in dynamic config
+      - "traefik.http.services.api_server.loadbalancer.server.port=8080" # Direct Traefik to the internal port of api_server
 
   frontend:
     build:
-      context: ./frontend # Set build context to the frontend application directory
-      dockerfile: Dockerfile # Dockerfile is now expected directly in that context
-    ports:
-      - "5173:5173"
+      context: ./frontend # <--- CORRECTED: This sets the build context to the frontend directory
+      dockerfile: Dockerfile # <--- Dockerfile is directly inside the context
+    container_name: ffa-frontend-1
     volumes:
-      - ./frontend:/app # This path still works as it's relative to the docker-compose.yml location (project root)
-      - /app/node_modules
-    command: ["npm", "run", "dev"]
+      - ./frontend:/app # Mount frontend source code for development
+      - /app/node_modules # Prevents host node_modules from conflicting with container's
+    ports:
+      - "5173:5173" # Keep this direct port mapping as Traefik is not managing the frontend for now
+    command: ["npm", "run", "dev"] # Your existing command
+    networks:
+      - ffa-network
+
+networks:
+  ffa-network:
+    external: false
