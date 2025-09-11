@@ -4,6 +4,8 @@
 FROM python:3.10-slim-buster
 
 # Set the working directory inside the container for the backend code.
+# This path should match the target path of the volume mount in docker-compose.yml
+# (i.e., `/app/backend`) for consistent live reloading during development.
 WORKDIR /app/backend
 
 # Copy requirements.txt from the root of the build context (FFA/)
@@ -15,6 +17,7 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 # relative to the build context (FFA/) into the container's WORKDIR (/app/backend).
 COPY App/backend/ .
 
-# Define the default command to run the backend service.
-# Replace with the actual command to start your backend logic.
-# CMD ["python", "run_backend.py"]
+# Keep the container running indefinitely.
+# This ensures the backend service remains "Up" and its mounted volumes are accessible
+# for the api_server to import data and modules.
+CMD ["tail", "-f", "/dev/null"]

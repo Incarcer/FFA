@@ -1,14 +1,12 @@
 # File: FFA/docker-compose.yml
 
-# File: FFA/docker-compose.yml (excerpt)
-
 services:
   api_server:
     build:
       context: . # Build context remains the project root (FFA/)
       dockerfile: App/api_server/Dockerfile
     ports:
-      - "8000:8000"
+      - "8080:8080"
     volumes:
       # Mount the api_server source code to its location relative to the container's /app WORKDIR.
       # This ensures live code changes are reflected correctly.
@@ -19,12 +17,9 @@ services:
       - .env
     # Override the Dockerfile's CMD for development with --reload.
     # The module path is now 'api_server.main:app'.
-    command: uvicorn api_server.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn api_server.main:app --host 0.0.0.0 --port 8080 --reload
     depends_on:
       - backend
-
-  # ... rest of your services (backend, frontend) ...
-
 
   backend:
     build:

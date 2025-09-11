@@ -16,8 +16,8 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 # This creates the correct Python package structure.
 COPY App/api_server/ ./api_server/
 
-EXPOSE 8000
+EXPOSE 8080
 
 # Default command to run the FastAPI application using Uvicorn.
 # Now, specify the full module path 'api_server.main:app' relative to the WORKDIR (/app).
-CMD ["uvicorn", "api_server.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "api_server.main:app", "--host", "0.0.0.0", "--port", "8080"]
