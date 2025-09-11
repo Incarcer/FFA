@@ -1,27 +1,30 @@
 # File: FFA/docker-compose.yml
 
+# File: FFA/docker-compose.yml (excerpt)
+
 services:
   api_server:
     build:
-      context: . # Set build context to the project root (FFA/)
-      dockerfile: App/api_server/Dockerfile # Path to the Dockerfile relative to the context
+      context: . # Build context remains the project root (FFA/)
+      dockerfile: App/api_server/Dockerfile
     ports:
-      - "8000:8000" # Map host port 8000 to container port 8000
+      - "8000:8000"
     volumes:
-      # Mount the api_server source code for live reloading during development.
-      # The target /app/api_server should match the WORKDIR in its Dockerfile.
+      # Mount the api_server source code to its location relative to the container's /app WORKDIR.
+      # This ensures live code changes are reflected correctly.
       - ./App/api_server:/app/api_server
-      # Mount the backend source code if api_server needs to import modules directly from it.
-      # The target /app/backend should match a path added to sys.path in the api_server container.
+      # The backend volume mount is already correctly configured if api_server depends on it.
       - ./App/backend:/app/backend
     env_file:
-      - .env # Load environment variables from a .env file at the project root
+      - .env
     # Override the Dockerfile's CMD for development with --reload.
-    # Assuming 'main.py' is directly in the WORKDIR /app/api_server,
-    # the module to run is 'main:app'.
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    # The module path is now 'api_server.main:app'.
+    command: uvicorn api_server.main:app --host 0.0.0.0 --port 8000 --reload
     depends_on:
-      - backend # Ensures backend service starts before api_server
+      - backend
+
+  # ... rest of your services (backend, frontend) ...
+
 
   backend:
     build:
