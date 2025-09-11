@@ -12,7 +12,7 @@ class YahooApiWrapper:
         # Source: "YFPY - Yahoo Fantasy Sports API Wrapper" and YFPY examples
         secrets_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'secrets'))
         env_file_location = Path(secrets_dir)
-        self.league_id = os.environ.get("YAHOO_LEAGUE_ID")
+        self.league_id = os.environ.get("YAHOO_LEAGUE_ID", "274391")
         self.game_code = os.environ.get("YAHOO_GAME_CODE", "nfl")
         self.game_id = int(os.environ.get("YAHOO_GAME_ID", "449"))  # Default to 2024 NFL
 

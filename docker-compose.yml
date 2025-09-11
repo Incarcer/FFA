@@ -40,8 +40,7 @@ services:
       dockerfile: ./App/api_server/Dockerfile # Path to the api_server's Dockerfile relative to the context
     container_name: ffa-api_server-1
     environment:
-      # These variables will be passed to your api_server container
-      # Ensure YAHOO_REDIRECT_URI matches what Traefik exposes and what you configure in Yahoo Developer Network
+        YAHOO_LEAGUE_ID=${YAHOO_LEAGUE_ID}
       - YAHOO_CONSUMER_KEY=${YAHOO_CONSUMER_KEY} # Will be read from your .env file
       - YAHOO_CONSUMER_SECRET=${YAHOO_CONSUMER_SECRET} # Will be read from your .env file
       - YAHOO_REDIRECT_URI=https://localhost:8080/connect/yahoo/callback # **Crucial: Update this**
