@@ -1,20 +1,34 @@
-# Use the official Node.js 20 Alpine image for a small, secure base
+# File: FFA/frontend/dockerfile.frontend
+
+# Use a Node.js base image.
+# Source: Knowledge base sections "Getting Started" and "Introduction" on Vite's Node.js requirement.
 FROM node:20-alpine
 
-# Set the working directory inside the container
+# Set the working directory inside the container.
+# This WORKDIR /app matches the target of the volume mount in docker-compose.yml (./frontend:/app)
+# for consistent live reloading during development.
 WORKDIR /app
 
-# FIX: Path corrected to find package.json in the root of the build context ('./frontend').
-COPY package*.json ./
+# Copy package.json first to leverage Docker's build cache.
+# The source path 'frontend/package.json' is relative to the build context (FFA/).
+# The destination './' is relative to the WORKDIR (/app) inside the container.
+# Source: Best practices for Node.js Dockerfiles for build cache optimization, implicitly supported
+# by general Docker build principles in the knowledge base (e.g., "Using the Build Cache").
+COPY frontend/package.json ./
 
-# Install dependencies. This now works because package.json is present.
+# Install Node.js dependencies using npm.
+# Since package-lock.json is missing, npm install will generate a new one based on package.json.
+# Source: Standard npm behavior.
 RUN npm install
 
-# FIX: This copies all files from the build context ('./frontend') into the image's WORKDIR.
-COPY . .
+# Copy the rest of the frontend application code from the 'frontend' directory
+# (relative to the build context FFA/) into the container's WORKDIR (/app).
+COPY frontend/ .
 
-# Expose the port Vite runs on
+# Expose the port for the frontend development server.
 EXPOSE 5173
 
-# The default command to run the development server.
+# Default command to run the frontend development server.
+# This will be overridden by the 'command' in docker-compose.yml for development.
+# Source: Your package.json script 'dev' and standard Vite/npm commands.
 CMD ["npm", "run", "dev"]

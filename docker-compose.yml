@@ -1,37 +1,48 @@
+# File: FFA/docker-compose.yml
+
 services:
   api_server:
     build:
-      context: ./App/api_server
-      dockerfile: Dockerfile
+      context: . # Set build context to the project root (FFA/)
+      dockerfile: App/api_server/Dockerfile # Path to the Dockerfile relative to the context
     ports:
-      - "8000:8000"
+      - "8000:8000" # Map host port 8000 to container port 8000
     volumes:
+      # Mount the api_server source code for live reloading during development.
+      # The target /app/api_server should match the WORKDIR in its Dockerfile.
       - ./App/api_server:/app/api_server
+      # Mount the backend source code if api_server needs to import modules directly from it.
+      # The target /app/backend should match a path added to sys.path in the api_server container.
       - ./App/backend:/app/backend
     env_file:
-      - .env
-    command: uvicorn api_server.main:app --host 0.0.0.0 --port 8000 --reload
+      - .env # Load environment variables from a .env file at the project root
+    # Override the Dockerfile's CMD for development with --reload.
+    # Assuming 'main.py' is directly in the WORKDIR /app/api_server,
+    # the module to run is 'main:app'.
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     depends_on:
-      - backend
+      - backend # Ensures backend service starts before api_server
 
   backend:
     build:
-      # Corrected path to the backend source code
-      context: ./App/backend
-      dockerfile: Dockerfile
+      context: . # Set build context to the project root (FFA/)
+      dockerfile: App/backend/Dockerfile # Path to the Dockerfile relative to the context
     volumes:
-      # Corrected path for the volume mount
-      - ./App/backend:/app
+      # Mount the backend source code for development.
+      # Assuming the WORKDIR in backend's Dockerfile is /app/backend.
+      - ./App/backend:/app/backend
     env_file:
-      - .env
+      - .env # Load environment variables from a .env file at the project root
+    # Add a specific command here to start your backend service if it's not a web server.
+    # For example: command: ["python", "run_processor.py"]
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: dockerfile.frontend
+      context: ./frontend # Set build context to the frontend application directory
+      dockerfile: Dockerfile # Dockerfile is now expected directly in that context
     ports:
       - "5173:5173"
     volumes:
-      - ./frontend:/app
+      - ./frontend:/app # This path still works as it's relative to the docker-compose.yml location (project root)
       - /app/node_modules
     command: ["npm", "run", "dev"]

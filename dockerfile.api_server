@@ -1,0 +1,28 @@
+# File: FFA/dockerfile.api_server
+
+# Use a lightweight Python base image
+FROM python:3.9-slim-buster
+
+# Set the working directory inside the container for the API server code
+# This is where the application files will reside inside the container
+WORKDIR /app/api_server
+
+# Copy the common requirements.txt from the project root (FFA/)
+# to a temporary location in the container (/app/) to leverage Docker's build cache.
+COPY requirements.txt /app/
+
+# Install Python dependencies from the copied requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
+
+# Copy the api_server application code from the host's App/api_server directory
+# into the container's working directory /app/api_server.
+# The source path 'App/api_server/' is relative to the build context (FFA/).
+COPY App/api_server/ .
+
+# Expose the port on which FastAPI will run (default is 8000)
+EXPOSE 8000
+
+# Command to run the FastAPI application using Uvicorn
+# 'main:app' refers to the 'app' object defined in 'main.py' within App/api_server.
+# '--host 0.0.0.0' makes the server accessible from outside the container.
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
