@@ -1,0 +1,37 @@
+services:
+  api_server:
+    build:
+      context: ./App/api_server
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./App/api_server:/app/api_server
+      - ./App/backend:/app/backend
+    env_file:
+      - .env
+    command: uvicorn api_server.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      # Corrected path to the backend source code
+      context: ./App/backend
+      dockerfile: Dockerfile
+    volumes:
+      # Corrected path for the volume mount
+      - ./App/backend:/app
+    env_file:
+      - .env
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: dockerfile.frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: ["npm", "run", "dev"]
