@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from fastapi import FastAPI
 import socketio
 from dotenv import load_dotenv
-
+from api_server.routers import yahoo_fantasy
 
 # Load environment variables from .env file
 load_dotenv()
@@ -25,7 +25,7 @@ app = FastAPI(
 # The path must match the client-side configuration
 sio_app = socketio.ASGIApp(sio, socketio_path="socket.io")
 
-
+app.include_router(yahoo_fantasy.router, prefix="/api/v1", tags=["Fantasy"])
 app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"])
 app.include_router(draft.router, prefix="/api/v1", tags=["Draft"])
 app.include_router(players.router, prefix="/api/v1", tags=["Players"])
