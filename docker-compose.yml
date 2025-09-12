@@ -1,28 +1,30 @@
 #version: '3.8'
-
 services:
   traefik:
-    image: "traefik:v2.10" # Using a recent stable Traefik v2 version
+    image: "traefik:v2.10"
     container_name: traefik
     command:
-      - --api.insecure=true # Enables the Traefik Dashboard at http://localhost:8081 for development
-      - --providers.docker=true # Enable Docker as a provider for dynamic configuration
-      - --providers.docker.exposedbydefault=false # Only expose services with traefik.enable=true label
-      - --entrypoints.web.address=:80 # Define an HTTP entrypoint on port 80
-      - --entrypoints.websecure.address=:8080 # Define an HTTPS entrypoint on port 8080 for your redirect URI
-      - --providers.file.filename=/etc/traefik/traefik-dynamic-config.yaml # Specify dynamic config file inside the container
-      - --providers.file.watch=true # Watch for changes in the dynamic config file
-      - --log.level=INFO # Set log level (DEBUG for more verbose, INFO for standard)
+      - --api.insecure=true # Enables the Traefik Dashboard
+      - --api.dashboard=true # Explicitly enables the dashboard (good practice)
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:8080 # This will still be internal port 8080
+      - --providers.file.filename=/etc/traefik/traefik-dynamic-config.yaml
+      - --providers.file.watch=true
+      - --log.level=INFO
+      - --entrypoints.traefik.address=:8081 # <--- ADD THIS LINE: Assign a dedicated internal port for the dashboard
     ports:
-      - "80:80"     # Expose HTTP port
-      - "8080:8080" # Expose HTTPS port for your application (matches your redirect URI)
-      - "8081:8081" # Expose Traefik Dashboard (optional)
+      - "80:80"
+      - "8443:8080" # This maps host 8443 to internal container 8080 (for websecure)
+      - "8081:8081" # This maps host 8081 to internal container 8081 (for dashboard)
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro # Mount Docker socket for Traefik to discover services
-      - ./traefik-dynamic-config.yaml:/etc/traefik/traefik-dynamic-config.yaml:ro # Mount the dynamic config file
-      - ./certs:/etc/traefik/certs:ro # Mount your existing generated self-signed certificates
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik-dynamic-config.yaml:/etc/traefik/traefik-dynamic-config.yaml:ro
+      - ./certs:/etc/traefik/certs:ro
     networks:
-      - ffa-network # Connect Traefik to your application network
+      - ffa-network
+
 
   backend:
     build:
@@ -39,11 +41,13 @@ services:
       context: . # Build context is the project root (FFA/)
       dockerfile: ./App/api_server/Dockerfile # Path to the api_server's Dockerfile relative to the context
     container_name: ffa-api_server-1
+    env_file:
+      - ./.env
     environment:
-        YAHOO_LEAGUE_ID=${YAHOO_LEAGUE_ID}
+      - YAHOO_LEAGUE_ID=${YAHOO_LEAGUE_ID}
       - YAHOO_CONSUMER_KEY=${YAHOO_CONSUMER_KEY} # Will be read from your .env file
       - YAHOO_CONSUMER_SECRET=${YAHOO_CONSUMER_SECRET} # Will be read from your .env file
-      - YAHOO_REDIRECT_URI=https://localhost:8080/connect/yahoo/callback # **Crucial: Update this**
+      - YAHOO_REDIRECT_URI=https://localhost:8443/connect/yahoo/callback # **Crucial: Update this**
       - PORT=8080 # Your application listens on this internal port
     volumes:
       - ./App/api_server:/app/api_server # Mount api_server source code
