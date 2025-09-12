@@ -74,7 +74,7 @@ services:
       dockerfile: Dockerfile # <--- Dockerfile is directly inside the context
     container_name: ffa-frontend-1
     volumes:
-      - ./frontend:/app # Mount frontend source code for development
+      - ./frontend:/app:/app/public # Mount frontend source code for development
       - /app/node_modules # Prevents host node_modules from conflicting with container's
     ports:
       - "5173:5173" # Keep this direct port mapping as Traefik is not managing the frontend for now
