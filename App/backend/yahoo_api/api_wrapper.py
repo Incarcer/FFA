@@ -11,10 +11,7 @@ from fastapi import HTTPException, status
 from backend.config import Settings, get_settings
 
 
-# Determine project root for YFPy token management (as in your v16. ... YFPY demo.py)
-project_dir = Path(__file__).parent.parent.parent # Adjust based on your actual file structure
-                                                   # If api_wrapper.py is in FFA/backend/yahoo_api,
-                                                   # this points to FFA/
+project_dir = Path(__file__).parent.parent.parent.parent
 
 
 class YahooFantasyAPI:
